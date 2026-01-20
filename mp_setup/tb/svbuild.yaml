@@ -1,0 +1,3 @@
+alu_tb:
+  tb_top: alu_tb/alu_tb.sv
+  source_dirs: alu_tb/

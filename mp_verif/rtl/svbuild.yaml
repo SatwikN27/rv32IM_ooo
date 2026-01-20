@@ -1,0 +1,14 @@
+lfsr_tb:
+  source_dirs: lfsr/
+alu_tb:
+  source_dirs: alu/
+loop_tb:
+  source_dirs: loop/
+tree_tb:
+  source_dirs: tree/
+cpu_tb:
+  source_dirs: cpu/
+  compile_first:
+    - cpu/types.sv
+rand_tb:
+  source_dirs: rand/
