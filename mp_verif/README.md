@@ -174,9 +174,9 @@ for you in the testbench. Spike runs in parallel to your core by snooping
 the memory bus and register file commits. If your CPU's commit differs from
 that of Spike, an error will be printed.
 
-<!-- To get started, copy over `rand/hvl/vcs/randinst.svh` and -->
-<!-- `rand/hvl/vcs/instr_cg.svh` to `cpu/hvl/vcs/`. Note that the -->
-<!-- constraints for loads and stores in `randinst.svh` must be modified to -->
+<!-- To get started, copy over `tb/rand_tb/randinst.sv` and -->
+<!-- `tb/rand_tb/instr_cg.sv` to `tb/cpu_tb/`. Note that the -->
+<!-- constraints for loads and stores in `randinst.sv` must be modified to -->
 <!-- maintain the "naturally aligned" constraint. The given CPU *does not -->
 <!-- support misaligned loads and stores*. -->
 

@@ -17,7 +17,7 @@ design using SystemVerilog from ECE 385: Digital Systems Laboratory.
 In this MP, you will learn some more advanced concepts in
 SystemVerilog and verification. You will also become familiar with the
 tools used in ECE 411, including the simulation, synthesis, and lint
-programs. This MP is divided into four parts, but you are only required to complete the first three:
+programs. This MP is divided into four parts:
 
 1. **SystemVerilog refresher:** You'll design a small module in
    SystemVerilog as a refresher, and to get familiar with the
@@ -422,7 +422,7 @@ Part of the testbench for the ALU has been provided at
 you understand everything that's going on. If there are any
 SystemVerilog keywords that you're unfamiliar with, you should look
 them up (or ask a TA!) to make sure you have a solid understanding of
-how to write a basic testbench. This testbench includes the file `tb/alu_tb/verify.svh`,
+how to write a basic testbench. This testbench includes the file `tb/alu_tb/verify.sv`,
 in which there are a number of incomplete `TODO`s -- work through them in order
 until you are able to fix the functional errors in the provided ALU.
 
@@ -554,7 +554,7 @@ organized by hierarchy.
 - In the Cells tab in DV, navigate the hierarchy and find the cell of interest
 - Right click on the cell, and select "Cross Probe to Source"
 
-The line highlighted with the red arrow is the line that result in this logic gate.
+The line highlighted with the green underline is the line that result in this logic gate.
 
 Repeat these step for all cells in the loop until you get the sense of where the loop is.
 
@@ -631,7 +631,7 @@ To link those gates back to your code:
 - Right click on the cell that you want to link back to your code
 - Select "Cross Probe to Source"
 
-The line highlighted with the red arrow is the line that synthesized to that logic gate.
+The line highlighted with the green underline is the line that synthesized to that logic gate.
 
 You can also show only part of the design in the critical path by invoking schematic here:
 
@@ -695,7 +695,7 @@ Clearly, the idea of constraints is very general. There are many cases
 where only a subset of inputs is actually valid. Constrained random
 can be used to generate packets of certain formats, or valid
 instructions for a CPU. This is your task: you must complete the
-random class in `rtl/rand/randinst.sv` called `RandInst` to randomly
+random class in `tb/rand_tb/randinst.sv` called `RandInst` to randomly
 generate valid RISC-V instructions. You will likely find the types
 defined in `rtl/rand/types.sv` extremely useful when writing the random
 constraints. The best reference for this part is Chapter 34
@@ -713,7 +713,7 @@ as well as for the last part of the MP.
 You've used functional coverage reports while writing the ALU to make
 sure that your directed test vectors had enough coverage. Now, you
 will write the SystemVerilog to evaluate the coverage of your random
-constraints. Take a look at `rtl/rand_tb/instr_cg.sv`. The first few
+constraints. Take a look at `tb/rand_tb/instr_cg.sv`. The first few
 coverpoints are simple enough to implement. The "cross coverpoints"
 are trickier, and this section explains how to reason about them. What
 we want to do is ensure that every row with hardcoded `funct7` at least once.
@@ -795,8 +795,8 @@ probability cases.
 The goal of this section is for you to get comfortable debugging and
 verifying RISC-V CPUs using this course's infrastructure. The core is
 provided in `rtl/cpu`, and has a few bugs that you will fix. You are expected to use
-handwritten RISC-V assembly to find bugs, but if you choose to do the optional
-randomized testbench (see `mp_verif/tb/rand_tb`) you may find it helpful.
+handwritten RISC-V assembly to find bugs, but you may find the
+randomized testbench useful (see `tb/rand_tb`).
 
 ## Getting Started
 To run the testbench, use the following command.

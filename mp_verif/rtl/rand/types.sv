@@ -102,3 +102,7 @@ package rv32i_types;
     // add your types in this file if needed.
 
 endpackage : rv32i_types
+
+module dut();
+    // placeholder for xprop config, ignore this
+endmodule : dut

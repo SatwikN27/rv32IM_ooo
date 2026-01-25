@@ -28,5 +28,8 @@ else
   source "$VENV_DIR/bin/activate"
 fi
 
+export OLD_PS1="$PS1"
+export PS1="(venv) [\[\e[36m\]\w\[\e[0m\]] \$ "
+
 echo -e "\e[32mEntering venv shell (exit to leave)\e[0m"
 exec "$SHELL" -i

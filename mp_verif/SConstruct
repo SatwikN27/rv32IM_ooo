@@ -143,7 +143,7 @@ class EnvironmentSetup:
         vars.Add("PROFILE", "Profile to use (defaults to replace_me)", default="replace_me")
         vars.Add(BoolVariable("DUMP_FSDB", "Dump FSDB file", default=True))
         vars.Add(PathVariable("PROG", "Program to simulate (Required for power)", None, PathVariable.PathIsFile))
-        vars.Add(BoolVariable("RAW", "Use plain, line-by-line tee output instead of the fancy live TTY window", default=False))
+        vars.Add(BoolVariable("RAW", "Use plain, line-by-line tee output instead of the fancy live TTY window", default=True))
         return vars
 
     @staticmethod

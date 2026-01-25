@@ -17,6 +17,7 @@ class BinaryCompiler:
         self.gcc = env["TOOL_CONFIG"]["riscv"]["RISCV_GCC"]
         self.objdump = env["TOOL_CONFIG"]["riscv"]["RISCV_OBJDUMP"]
         self.objcopy = env["TOOL_CONFIG"]["riscv"]["RISCV_OBJCOPY"]
+        self.env = env["ENV"]
 
         self.input_file = input_file
         self.output_folder = output_folder
@@ -45,6 +46,7 @@ class BinaryCompiler:
             rc = run_and_log(
                 cmd,
                 log_path=os.path.join(self.output_folder, "bc_elf.log"),
+                env=self.env,
                 cwd=self.output_folder,
                 simple_output=self.tty_output
             )
@@ -66,6 +68,7 @@ class BinaryCompiler:
         rc = run_and_log(
             cmd,
             log_path=os.path.join(self.output_folder, "bc_dis.log"),
+            env=self.env,
             cwd=self.output_folder,
             simple_output=self.tty_output
         )

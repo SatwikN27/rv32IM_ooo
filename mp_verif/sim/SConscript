@@ -352,7 +352,7 @@ def build_simulation(name: str, tb: str):
     rvfi_enabled = env["SIM_CFG"].get("rvfi_enabled", False)
     binary_enabled = env["SIM_CFG"].get("binary_compilation_enabled", False)
 
-    dependencies = [tb, rtl_sources]
+    dependencies = [tb, rtl_sources, rtl_audit]
 
     if binary_enabled:
         if env.get("PROG") is None:
@@ -366,8 +366,6 @@ def build_simulation(name: str, tb: str):
         dependencies.append(binary)
 
     if rvfi_enabled:
-        dependencies.append(rtl_audit)
-
         rvfi_sv = env.BuildRVFIRef(
             os.path.join(output_dir, "rvfi_reference.sv"),
             Value(env["RVFI_CFG"])
@@ -440,9 +438,9 @@ def spike_action(target, source, env):
 
     cmd = (
         f"cd {output_dir} && {spike_path} --isa={arch} "
-        f"-m0xaaaaa000:0x55556000 --log-commits {env.get('PROG')}"
+        f"-m0xaaaaa000:0x55556000 --log-commits {os.path.join(output_dir, 'program.elf')}"
     )
-    print(f"[bold cyan][SPIKE] Launching Spike with {env.get('PROG')} in {output_dir}[/bold cyan]")
+    print(f"[bold cyan][SPIKE] Launching Spike with {os.path.join(output_dir, 'program.elf')} in {output_dir}[/bold cyan]")
 
     spike_log_path = os.path.join(output_dir, "spike.log")
 
@@ -459,6 +457,7 @@ def spike_action(target, source, env):
     with open(spike_log_path, "w") as f:
         f.writelines(lines[5:])
 
+    print(f"[bold cyan][SPIKE] Spike finished: {spike_log_path}[/bold cyan]")
     return 0
 
 def covrep_action(target, source, env):
@@ -522,16 +521,28 @@ if set(COMMAND_LINE_TARGETS) & {"compile", "sim", "power", "verdi", "spike", "co
     Alias("verdi", verdi_target)
 
 
+    spike_dependencies = []
+    if env["SIM_CFG"].get("binary_compilation_enabled", False):
+        if env.get("PROG") is None:
+            print(f"[bold red][SIM] ERROR:[/bold red] PROG is not set but binary_compilation_enabled=true")
+            sys.exit(1)
+
+        binary = env.BuildBinary(
+            os.path.join(output_dir, "program.elf"),
+            [File(env.get("PROG")), Value(env["SIM_CFG"].get("arch", "rv32i"))]
+        )
+        spike_dependencies.append(binary)
+        
     spike_target = env.Command(
         target=os.path.abspath(os.path.join(output_dir, "spike.log")),
-        source=[File(env.get("PROG"))],
+        source=spike_dependencies,
         action=Action(spike_action, cmdstr=None),
     )
     Alias("spike", spike_target)
 
     covrep_target = env.Command(
         target=os.path.abspath(os.path.join(output_dir, "covrep.log")),
-        source=[],
+        source=glob(os.path.join(output_dir, f"{requested_tb}.vdb", "**/*"), recursive=True),
         action=Action(covrep_action, cmdstr=None),
     )
     Alias("covrep", covrep_target)

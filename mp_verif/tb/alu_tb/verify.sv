@@ -5,7 +5,7 @@ task verify_alu(output bit passed);
 
     passed = 1'b1;
 
-    // TODO: Modify this code to cover all coverpoints in coverage.svh.
+    // TODO: Modify this code to cover all coverpoints in coverage.sv.
     for (int i = 0; i <= 6; ++i) begin
         std::randomize(a_rand);
         // TODO: Randomize b_rand using std::randomize.

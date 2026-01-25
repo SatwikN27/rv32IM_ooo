@@ -99,6 +99,8 @@ def run_and_log(
 ) -> int:
 
     if simple_output:
+        if log_path is not None:
+            log_path = os.path.abspath(log_path)
         cmd = cmd + " |& tee " + log_path
         result = subprocess.run(cmd, shell=shell, env=env, cwd=cwd, stdout=sys.stdout, stderr=sys.stderr)
         return result.returncode
