@@ -1,0 +1,18 @@
+{
+    "valid[0]"     : "",
+    "order[0]"     : "",
+    "inst[0]"      : "",
+    "rs1_addr[0]"  : "",
+    "rs2_addr[0]"  : "",
+    "rs1_rdata[0]" : "",
+    "rs2_rdata[0]" : "",
+    "rd_addr[0]"   : "",
+    "rd_wdata[0]"  : "",
+    "pc_rdata[0]"  : "",
+    "pc_wdata[0]"  : "",
+    "mem_addr[0]"  : "",
+    "mem_rmask[0]" : "",
+    "mem_wmask[0]" : "",
+    "mem_rdata[0]" : "",
+    "mem_wdata[0]" : ""
+}
