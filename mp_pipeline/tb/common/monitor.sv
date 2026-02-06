@@ -341,18 +341,41 @@ module spike_dpi_checker #(
                 r.order   = order_t'(mon_itf.order[ch]);
                 r.rvfi    = snapshot_dut(ch);
 
+                if (pending.exists(r.order)) begin
+                    $display("");
+                    $error("Spike Monitor Error at time %0t channel %0d order %0d",
+                            $time, r.channel, r.order);
+                    $display("Duplicate order %0d (already pending from channel %0d).",
+                                r.order, pending[r.order].channel);
+                    $display("");
+                    mon_itf.error <= 1'b1;
+                end
+
                 pending[r.order] = r;
             end
         end
 
         // Compare phase
-        while (pending.exists(spike_dpi_order)) begin
+        while (pending.num() > 0) begin
+            order_t      min_order;
             diff_t       diff;
             int unsigned rc;
             dut_retire_t r;
 
-            r = pending[spike_dpi_order];
+            if (!pending.first(min_order)) break;
 
+            if (min_order != spike_dpi_order) begin
+                $display("");
+                $error("Spike Monitor Error at time %0t order %0d",
+                        $time, min_order);
+                $display("Order mismatch: expected %0d, got %0d.",
+                            spike_dpi_order, min_order);
+                $display("");
+                mon_itf.error <= 1'b1;
+                break;
+            end
+
+            r = pending[min_order];
 
             rc = spike_dpi_step(spike_rvfi);
 
@@ -377,24 +400,13 @@ module spike_dpi_checker #(
                             spike_rvfi.pc_rdata, spike_rvfi.inst, dasm);
                 $display("");
                 mon_itf.error <= 1'b1;
-
-            end
-            else if (r.order != spike_dpi_order) begin
-                $display("");
-                $error("Spike Monitor Error at time %0t channel %0d order %0d",
-                        $time, r.channel, r.order);
-                $display("Expected order %0d, got %0d.",
-                            spike_dpi_order, r.order);
-                $display("");
-                mon_itf.error <= 1'b1;
-
             end
             else if (any_diff(diff)) begin
                 print_mismatch(r, spike_rvfi, diff);
                 mon_itf.error <= 1'b1;
             end
 
-            pending.delete(spike_dpi_order);
+            pending.delete(min_order);
             spike_dpi_order <= spike_dpi_order + 1;
         end
 
@@ -815,10 +827,6 @@ module roi_monitor #(
                     $display("[roi_monitor] Power window start at time %0t", $time);
                     power_start_time <= $time;
                     power_printed    <= 1'b0;
-
-                    if (dump_fsdb) begin
-                        $fsdbDumpon();
-                    end
                 end
 
                 if (mon_itf.inst[channel] == PWR_STOP_INST) begin
@@ -827,10 +835,6 @@ module roi_monitor #(
 
                     $fwrite(roi_fd, "%0t\n", power_start_time);
                     $fwrite(roi_fd, "%0t", $time);
-
-                    if (dump_fsdb) begin
-                        $fsdbDumpoff();
-                    end
                 end
             end
         end
