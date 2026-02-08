@@ -201,11 +201,13 @@ def audit_rtl_files(target, source, env):
     any_errors = False
     any_warnings = False
 
-    rtl_sources = source[0] if isinstance(source[0], (list, tuple)) else [source[0]]
 
-    for src in rtl_sources:
+    for src in source:
         filepath = Path(str(src))
         in_block_comment = False
+
+        if not str(filepath).endswith(".sv"):
+            continue
 
         try:
             with filepath.open("r", encoding="utf-8", errors="ignore") as f:

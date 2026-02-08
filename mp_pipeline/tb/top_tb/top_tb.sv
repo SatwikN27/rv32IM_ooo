@@ -33,7 +33,7 @@
         if (mon_itf.halt) begin
             $finish;
         end
-        if (mon_itf.error != 0) begin
+        if (mon_itf.error != 0 || mem_itf.error != 0) begin
             $fatal;
         end
     end
