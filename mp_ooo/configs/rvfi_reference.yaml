@@ -1,0 +1,17 @@
+# Replace these!
+valid[0]: dut.signal
+order[0]: dut.signal
+inst[0]: dut.signal
+rs1_addr[0]: dut.signal
+rs2_addr[0]: dut.signal
+rs1_rdata[0]: dut.signal
+rs2_rdata[0]: dut.signal
+rd_addr[0]: dut.signal
+rd_wdata[0]: dut.signal
+pc_rdata[0]: dut.signal
+pc_wdata[0]: dut.signal
+mem_addr[0]: dut.signal
+mem_rmask[0]: dut.signal
+mem_wmask[0]: dut.signal
+mem_rdata[0]: dut.signal
+mem_wdata[0]: dut.signal
