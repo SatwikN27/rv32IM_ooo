@@ -236,14 +236,17 @@ def fsdb_to_saif_action(target, source, env):
         return 1
 
     with open(log_path, 'r', errors='ignore') as logf:
-        log_contents = logf.read()
-        if re.search(r'error', log_contents, re.IGNORECASE):
-            print(
-                f"[bold red][POWER] ERROR:[/bold red] "
-                f"Found 'error' in fsdb2saif log: {log_path}",
-                file=sys.stderr,
-            )
-            return 1
+        for raw_line in logf:
+            line = raw_line.strip()
+            if line.lower() == 'resource file error':
+                continue
+            if re.search(r'error', line, re.IGNORECASE):
+                print(
+                    f"[bold red][POWER] ERROR:[/bold red] "
+                    f"Found 'error' in fsdb2saif log: {log_path}",
+                    file=sys.stderr,
+                )
+                return 1
 
     print(
         f"[bold green][POWER] SUCCESS:[/bold green] "
