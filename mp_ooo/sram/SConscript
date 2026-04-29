@@ -76,7 +76,7 @@ def copy_from_global_cache(cache_id, local_output_dir, local_name):
         f.write(data)
 
     cmd = (
-        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libcrypto.so.1.1\" "
+        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libtinfo.so.5\" "
         "lc_shell -x 'read_lib {lib_file}; write_lib {lib_name}; exit'"
     ).format(
         lib_file=os.path.join(local_output_dir, f"{local_name}_TT_1p0V_25C.lib"),
@@ -232,7 +232,7 @@ def run_opensram(config_file, output_dir):
             f.write(content)
 
     cmd = (
-        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libcrypto.so.1.1\" "
+        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libtinfo.so.5\" "
         "lc_shell -x 'read_lib {lib_file}; write_lib {lib_name}; exit'"
     ).format(
         lib_file=lib_file,
