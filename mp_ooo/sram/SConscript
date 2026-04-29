@@ -11,12 +11,14 @@ import string
 from pathlib import Path
 from rich import print
 from site_scons.library.helpers import run_and_log
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 Import('env')
 
 GLOBAL_CACHE_ROOT = env["TOOL_CONFIG"]["sram"]["SRAM_GLOBAL_CACHE"]
 SRAM_OUTPUT_ROOT = os.path.join(env["BUILD_ROOT"], "sram")
 SRAM_ROOT = env["SRAM_ROOT"]
+SRAM_JOBS = int(os.environ.get("SRAM_JOBS", os.cpu_count() or 4))
 
 
 def compute_config_hash(config_path):
@@ -74,7 +76,7 @@ def copy_from_global_cache(cache_id, local_output_dir, local_name):
         f.write(data)
 
     cmd = (
-        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libtinfo.so.5\" "
+        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libcrypto.so.1.1\" "
         "lc_shell -x 'read_lib {lib_file}; write_lib {lib_name}; exit'"
     ).format(
         lib_file=os.path.join(local_output_dir, f"{local_name}_TT_1p0V_25C.lib"),
@@ -230,7 +232,7 @@ def run_opensram(config_file, output_dir):
             f.write(content)
 
     cmd = (
-        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libtinfo.so.5\" "
+        "LD_PRELOAD=\"/lib64/libk5crypto.so.3 /lib64/libcrypto.so.1.1\" "
         "lc_shell -x 'read_lib {lib_file}; write_lib {lib_name}; exit'"
     ).format(
         lib_file=lib_file,
@@ -276,12 +278,9 @@ def sram_generate_action(target, source, env):
         print("[bold green][SRAM] SUCCESS:[/bold green] No YAML config files found in sram")
         return 0
 
-    print(f"[bold cyan][SRAM][/bold cyan] [bold blue]Processing {len(yaml_files)} config(s)...")
+    print(f"[bold cyan][SRAM][/bold cyan] [bold blue]Processing {len(yaml_files)} config(s) with {SRAM_JOBS} job(s)...")
 
-    generated_count = 0
-    cached_count = 0
-
-    for yaml_path in yaml_files:
+    def process_yaml(yaml_path):
         name = yaml_path.stem
         config_hash = compute_config_hash(str(yaml_path))
         local_output_dir = os.path.join(SRAM_OUTPUT_ROOT, name)
@@ -289,32 +288,44 @@ def sram_generate_action(target, source, env):
         if config_hash in global_cache_index:
             cache_id = global_cache_index[config_hash]
             if copy_from_global_cache(cache_id, local_output_dir, name):
-                print(f"[bold green][SRAM][/bold green] Using global cache for [cyan]{name}[/cyan] (cache: [dim]{cache_id}[/dim])")
-                cached_count += 1
-                continue
+                return ("cached", name, cache_id)
             else:
                 print(f"[bold yellow][SRAM] WARNING:[/bold yellow] Global cache entry exists but files missing for [cyan]{name}[/cyan]")
 
         print(f"[bold cyan][SRAM][/bold cyan] Generating artifacts for [cyan]{name}[/cyan]")
 
-        with open(yaml_path, 'r') as f:
+        with open(yaml_path, "r") as f:
             config_data = yaml.safe_load(f)
-
-        print(f"[bold cyan][SRAM][/bold cyan] Running local OpenRAM generation for: [cyan]{name}[/cyan]")
 
         config_file = generate_opensram_config(str(yaml_path), local_output_dir, name, config_data)
         run_opensram(config_file, local_output_dir)
 
-        generated_count += 1
+        return ("generated", name, None)
+
+    generated_count = 0
+    cached_count = 0
+
+    with ThreadPoolExecutor(max_workers=SRAM_JOBS) as pool:
+        futures = [pool.submit(process_yaml, yaml_path) for yaml_path in yaml_files]
+
+        for fut in as_completed(futures):
+            status, name, cache_id = fut.result()
+
+            if status == "cached":
+                print(f"[bold green][SRAM][/bold green] Using global cache for [cyan]{name}[/cyan] (cache: [dim]{cache_id}[/dim])")
+                cached_count += 1
+            elif status == "generated":
+                generated_count += 1
 
     print(f"[bold green][SRAM] SUCCESS:[/bold green] {generated_count} generated, {cached_count} cached")
 
     target_file = str(target[0])
-    with open(target_file, 'w') as f:
-        f.write(f"# SRAM generation completed\n")
+    with open(target_file, "w") as f:
+        f.write("# SRAM generation completed\n")
         f.write(f"# Generated: {generated_count}, Cached: {cached_count}\n")
 
     return 0
+
 
 def sram_cache_generate_action(target, source, env):
     global_cache_file = os.path.join(GLOBAL_CACHE_ROOT, ".cache_index.json")
@@ -325,40 +336,37 @@ def sram_cache_generate_action(target, source, env):
         print("[bold green][SRAM] SUCCESS:[/bold green] No YAML config files found in sram")
         return 0
 
-    print(f"[bold cyan][SRAM][/bold cyan] [bold blue]Processing {len(yaml_files)} config(s)...")
+    print(f"[bold cyan][SRAM][/bold cyan] [bold blue]Processing {len(yaml_files)} config(s) with {SRAM_JOBS} job(s)...")
 
-    new_global_cache_index = global_cache_index.copy()
-    generated_count = 0
-    cached_count = 0
-
-    for yaml_path in yaml_files:
+    def process_yaml(yaml_path):
         name = yaml_path.stem
         config_hash = compute_config_hash(str(yaml_path))
-        local_output_dir = os.path.join(SRAM_OUTPUT_ROOT, name)
 
         if config_hash in global_cache_index:
             cache_id = global_cache_index[config_hash]
-            print(f"[bold green][SRAM][/bold green] Using global cache for [cyan]{name}[/cyan] (cache: [dim]{cache_id}[/dim])")
-            cached_count += 1
-            continue
+            return ("cached", name, config_hash, cache_id)
 
         print(f"[bold cyan][SRAM][/bold cyan] Generating artifacts for [cyan]{name}[/cyan]")
 
-        with open(yaml_path, 'r') as f:
+        with open(yaml_path, "r") as f:
             config_data = yaml.safe_load(f)
 
         cache_id = generate_cache_id()
         output_dir = os.path.join(SRAM_OUTPUT_ROOT, cache_id)
+
         print(f"[bold cyan][SRAM][/bold cyan] Running local OpenRAM generation for: [cyan]{name}[/cyan] (cache: [dim]{cache_id}[/dim])")
 
         config_file = generate_opensram_config(str(yaml_path), output_dir, cache_id, config_data)
         run_opensram(config_file, output_dir)
-        os.remove(os.path.join(SRAM_OUTPUT_ROOT, cache_id, f"{cache_id}_TT_1p0V_25C_lib.db"))
-        
+
+        db_file = os.path.join(output_dir, f"{cache_id}_TT_1p0V_25C_lib.db")
+        if os.path.exists(db_file):
+            os.remove(db_file)
+
         keep_files = {
             f"{cache_id}.v",
             f"{cache_id}_TT_1p0V_25C.lib",
-            f"{cache_id}.html"
+            f"{cache_id}.html",
         }
 
         global_sram_dir = os.path.join(GLOBAL_CACHE_ROOT, cache_id)
@@ -367,13 +375,30 @@ def sram_cache_generate_action(target, source, env):
         for file_name in keep_files:
             src = os.path.join(output_dir, file_name)
             dst = os.path.join(global_sram_dir, file_name)
+
             if os.path.exists(src):
                 shutil.copy2(src, dst)
             else:
                 print(f"[bold yellow][SRAM] WARNING:[/bold yellow] Expected file not found: {src}")
 
-        new_global_cache_index[config_hash] = cache_id
-        generated_count += 1
+        return ("generated", name, config_hash, cache_id)
+
+    new_global_cache_index = global_cache_index.copy()
+    generated_count = 0
+    cached_count = 0
+
+    with ThreadPoolExecutor(max_workers=SRAM_JOBS) as pool:
+        futures = [pool.submit(process_yaml, yaml_path) for yaml_path in yaml_files]
+
+        for fut in as_completed(futures):
+            status, name, config_hash, cache_id = fut.result()
+
+            if status == "cached":
+                print(f"[bold green][SRAM][/bold green] Using global cache for [cyan]{name}[/cyan] (cache: [dim]{cache_id}[/dim])")
+                cached_count += 1
+            elif status == "generated":
+                new_global_cache_index[config_hash] = cache_id
+                generated_count += 1
 
     save_cache_index(global_cache_file, new_global_cache_index)
 
