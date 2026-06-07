@@ -1,0 +1,9 @@
+Scheduler:
+  impl: FRFCFS
+RefreshManager:
+  impl: AllBank
+RowPolicy:
+  impl: ClosedRowPolicy
+  cap: 4
+AddrMapper:
+  impl: RoBaRaCoCh

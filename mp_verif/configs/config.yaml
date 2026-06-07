@@ -1,0 +1,96 @@
+common_simulation: &common_simulation
+  clock_period: 1000 # In picoseconds
+  timeout: 10000000
+  builder: generic
+  arch: rv32i
+  
+  vcs_config_enabled: true
+  rvfi_enabled: false
+  binary_compilation_enabled: false
+
+common_synthesis: &common_synthesis
+  syn_script: dc/synthesis.tcl
+  constraint_file: constraints/default.sdc
+
+  compile_ultra: false
+  ungroup: false
+  gate_clock: false
+  retime: false
+  min_power: false
+  compile_iterations: 0
+
+  power_script: dc/power.tcl
+  scope: tb_wrapper/dut
+
+  lint_awl: lint.awl
+  lint_script: lint.tcl
+
+  dv_script: dc/dv.tcl
+
+lfsr_tb:
+  supported_targets: [compile, sim, audit, verdi, covrep, syn, dv, lint]
+  sim: 
+    <<: *common_simulation
+    tb_name: lfsr_tb
+    timeout: 5000000
+  syn:
+    <<: *common_synthesis
+    design_top: lfsr
+    constraint_file: constraints/lfsr.sdc
+
+alu_tb:
+  supported_targets: [compile, sim, audit, verdi, covrep, syn, dv, lint]
+  sim: 
+    <<: *common_simulation
+    tb_name: alu_tb
+    timeout: 1000000
+  syn:
+    <<: *common_synthesis
+    design_top: alu
+    constraint_file: constraints/alu.sdc
+
+loop_tb:
+  supported_targets: [compile, sim, audit, verdi, covrep, syn, dv, lint]
+  sim: 
+    <<: *common_simulation
+    tb_name: loop_tb
+    timeout: 50000
+  syn:
+    <<: *common_synthesis
+    design_top: loop
+    constraint_file: constraints/loop.sdc
+
+tree_tb:
+  supported_targets: [compile, sim, audit, verdi, covrep, syn, dv, lint]
+  sim: 
+    <<: *common_simulation
+    tb_name: tree_tb
+    clock_period: 216
+    timeout: 13888889
+  syn:
+    <<: *common_synthesis
+    design_top: tree
+    constraint_file: constraints/tree.sdc
+
+cpu_tb:
+  supported_targets: [compile, sim, audit, verdi, spike, covrep, syn, dv, lint]
+  sim: 
+    <<: *common_simulation
+    tb_name: cpu_tb 
+    clock_period: 4000
+    builder: cpu
+    commit_log_frequency: 200
+    rvfi_enabled: true
+    binary_compilation_enabled: true
+  syn:
+    <<: *common_synthesis
+    design_top: cpu
+    constraint_file: constraints/cpu.sdc
+  
+rand_tb:
+  supported_targets: [compile, sim, verdi, covrep]
+  sim: 
+    <<: *common_simulation
+    tb_name: rand_tb
+  syn:
+    <<: *common_synthesis

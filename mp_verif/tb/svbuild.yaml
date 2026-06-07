@@ -1,0 +1,35 @@
+lfsr_tb:
+  tb_top: lfsr_tb/lfsr_tb.sv
+  source_dirs: lfsr_tb/
+
+alu_tb:
+  tb_top: alu_tb/alu_tb.sv
+  source_dirs: alu_tb/
+  include_files:
+    - alu_tb/verify.sv
+    - alu_tb/coverage.sv
+    - alu_tb/final.sv
+
+loop_tb:
+  tb_top: loop_tb/loop_tb.sv
+  source_dirs: loop_tb/
+
+tree_tb:
+  tb_top: tree_tb/tree_tb.sv
+  source_dirs: tree_tb/
+
+cpu_tb:
+  tb_top: cpu_tb/cpu_tb.sv
+  source_dirs:
+    - cpu_tb/
+    - common/
+  include_files:
+    - cpu_tb/randinst.sv
+    - cpu_tb/instr_cg.sv
+
+rand_tb:
+  tb_top: rand_tb/rand_tb.sv
+  source_dirs: rand_tb/
+  include_files:
+    - rand_tb/randinst.sv
+    - rand_tb/instr_cg.sv

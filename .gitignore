@@ -1,0 +1,7 @@
+
+**/.venv
+**/.sconsign.dblite
+**/.pyc
+**/.vscode
+**/.DS_Store
+**/.nfs*
