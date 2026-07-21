@@ -19,6 +19,20 @@ module cache (
     input   logic           dfp_resp
 );
 
+enum logic [1:0]{
+    IDLE, SEARCH, WRITE_BACK, ALLOCATE
+} state, state_next;
+
+logic [23:0]    tag_q;
+logic [3:0]     set_q;
+logic [4:0]     byte_offset;
+
+always_comb begin
+    tag_q = ufp_addr[31:9];
+    set_q = ufp_addr[8:5];
+    byte_offset = ufp_addr[4:0];
+end
+
     generate for (genvar i = 0; i < 4; i++) begin : arrays
         mp_cache_data_array data_array (
             .clk0       (),
@@ -59,5 +73,16 @@ module cache (
         .din0       (),
         .dout0      ()
     );
+
+
+
+always_comb begin
+    unique case (state)
+    IDLE: begin
+
+    end
+
+
+end
 
 endmodule
